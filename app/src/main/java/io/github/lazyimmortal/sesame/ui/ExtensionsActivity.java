@@ -21,6 +21,7 @@ public class ExtensionsActivity extends BaseActivity {
     Button btnClearDishImage;
     Button btnSetCustomWalkPathId, btnSetCustomWalkPathIdQueue;
     Button btnDeveloperMode;
+    Button btnFillWateredFriendList;
 
     @Override
     protected void onCreate(Bundle bundle) {
@@ -37,7 +38,7 @@ public class ExtensionsActivity extends BaseActivity {
         btnSetCustomWalkPathId = findViewById(R.id.btn_set_custom_walk_path_id_list);
         btnSetCustomWalkPathIdQueue = findViewById(R.id.btn_set_custom_walk_path_id_queue);
         btnDeveloperMode = findViewById(R.id.btn_developer_mode);
-        
+        btnFillWateredFriendList = findViewById(R.id.btn_fill_watered_friend_list);
         
         btnGetWateredItems.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -140,6 +141,14 @@ public class ExtensionsActivity extends BaseActivity {
                 } catch (Exception e) {
                     ToastUtil.show(ExtensionsActivity.this, "不符合开启资格！");
                 }
+            }
+        });
+
+        btnFillWateredFriendList.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendItemsBroadcast("antForest", "fillWateredFriendList", null);
+                ToastUtil.show(ExtensionsActivity.this, "已发送填入请求，请在森林日志查看结果！");
             }
         });
     }

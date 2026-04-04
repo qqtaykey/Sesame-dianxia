@@ -6,13 +6,17 @@
 
     <include layout="@layout/base_title" />
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/background"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:padding="6dp">
+        android:background="@color/background">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="6dp">
 
         <LinearLayout
             style="?android:attr/buttonBarStyle"
@@ -41,6 +45,36 @@
                 android:layout_weight="1"
                 android:background="@drawable/button_extend"
                 android:text="@string/get_watering_items"
+                android:textColor="@color/button_text" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="?android:attr/buttonBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_fill_watered_friend_list"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_extend"
+                android:text="@string/fill_watered_friend_list"
+                android:textColor="@color/button_text" />
+
+            <Button
+                android:id="@+id/btn_clear_dish_image"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:layout_weight="1"
+                android:background="@drawable/button_extend"
+                android:text="@string/clear_dish_image"
                 android:textColor="@color/button_text" />
         </LinearLayout>
 
@@ -113,25 +147,6 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/btn_clear_dish_image"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:layout_weight="1"
-                android:background="@drawable/button_extend"
-                android:text="@string/clear_dish_image"
-                android:textColor="@color/button_text" />
-        </LinearLayout>
-
-        <LinearLayout
-            style="?android:attr/buttonBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal">
-
-            <Button
                 android:id="@+id/btn_set_custom_walk_path_id_list"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="0dp"
@@ -172,5 +187,6 @@
                 android:text="@string/developer_mode"
                 android:textColor="@color/button_text" />
         </LinearLayout>
-    </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
 </LinearLayout>

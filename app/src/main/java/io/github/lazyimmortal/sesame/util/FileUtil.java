@@ -26,29 +26,32 @@ public class FileUtil {
     // 备份相关配置（可根据需求调整n值，比如n=3则A/B/C循环）
     private static int BACKUP_MAX_COUNT = 5; // 配置读取失败时的默认值
     private static final String BACKUP_DIR_NAME = "bak"; // 备份子目录名
-    private static final String BACKUP_FILE_PREFIX = "config_v2_";
-    private static final String BACKUP_FILE_EXT = ".json";
+    public static final String BACKUP_FILE_PREFIX = "config_v2_";
+    public static final String BACKUP_FILE_EXT = ".json";
     
     /**
      * 从 BaseModel 动态读取备份保留份数（核心修改）
      *
-     * @return 配置中的备份份数，失败则返回默认值3
+     * @return 配置中的备份份数，失败则返回默认值5
      */
-    private static int getBackupMaxCountFromConfig() {
+    public static int getBackupMaxCountFromConfig() {
         try {
             //获取 BaseModel 实例（注意：原代码bakupConfigDays有拼写错误，建议修正为backupConfigDays）
             Integer configCount = BaseModel.backupConfigDays.getValue();
             
             //校验配置值有效性（非正数则用默认值）
             if (configCount != null && configCount > 0) {
-                return configCount;
+                // 限制最大备份数量，防止配置错误导致问题
+                int maxLimit = 26; // A-Z最多26个
+                return Math.min(configCount, maxLimit);
             } else {
                 Log.error("BaseModel中备份份数配置无效（值：" + configCount + "），使用默认值" + 5);
                 return 5;
             }
         } catch (Exception e) {
             // 捕获所有异常（BaseModel实例获取失败/方法调用失败等）
-            Log.error("读取BaseModel备份配置失败，使用默认值" + 5+e); // 修复日志拼接问题
+            Log.error("读取BaseModel备份配置失败，使用默认值" + 5);
+            Log.printStackTrace("FileUtil.getBackupMaxCountFromConfig", e);
             return 5;
         }
     }
@@ -70,7 +73,7 @@ public class FileUtil {
      *
      * @param index 索引（0=A,1=B,2=C...）
      */
-    private static String getBackupSuffix(int index) {
+    public static String getBackupSuffix(int index) {
         return String.valueOf((char) ('A' + index));
     }
     
@@ -174,10 +177,16 @@ public class FileUtil {
             return;
         }
         
-        // 3. 找到该用户下一个要使用的备份文件（按A→B→C顺序）
+        // 3. 检查配置是否为默认配置，如果是则不备份
+        if (io.github.lazyimmortal.sesame.data.ConfigV2.isCurrentConfigDefault(originalFile)) {
+            Log.record("配置是默认配置，跳过备份");
+            return;
+        }
+        
+        // 4. 找到该用户下一个要使用的备份文件（按A→B→C顺序）
         File targetFile = findNextBackupFileForUser(userId); // 替换为新的方法
         
-        // 4. 执行备份（覆盖目标文件）
+        // 5. 执行备份（覆盖目标文件）
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 Files.copy(originalFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -187,6 +196,34 @@ public class FileUtil {
             Log.printStackTrace(FileUtil.class.getSimpleName(), e);
             Log.error("备份失败|用户: " + (StringUtil.isEmpty(userId) ? "default" : userId) + "|原因: " + e.getMessage());
         }
+    }
+    
+    /**
+     * 查找最新的备份文件
+     * @param userId 用户ID
+     * @return 最新的备份文件
+     */
+    public static File findLatestBackupFile(String userId) {
+        String safeUserId = StringUtil.isEmpty(userId) ? "default" : userId;
+        File backupDir = getBackupDirectoryFile();
+        int maxCount = getBackupMaxCountFromConfig();
+        
+        File latestFile = null;
+        long latestTime = 0;
+        
+        for (int i = 0; i < maxCount; i++) {
+            String suffix = getBackupSuffix(i);
+            File file = new File(backupDir, BACKUP_FILE_PREFIX + safeUserId + "_" + suffix + BACKUP_FILE_EXT);
+            if (file.exists()) {
+                long fileTime = file.lastModified();
+                if (fileTime > latestTime) {
+                    latestTime = fileTime;
+                    latestFile = file;
+                }
+            }
+        }
+        
+        return latestFile;
     }
     
     @SuppressWarnings("deprecation")

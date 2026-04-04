@@ -197,6 +197,8 @@ public class AntForestV2 extends ModelTask {
     private ChoiceModelField waterFriendType;
     private SelectAndCountModelField waterFriendList;
     
+    private SelectAndCountModelField wateredFriendList;
+    
     private BooleanModelField doubleWaterFriendEnergy;
     private SelectModelField giveEnergyRainList;
     private BooleanModelField vitalityExchangeBenefit;
@@ -257,6 +259,7 @@ public class AntForestV2 extends ModelTask {
         modelFields.addField(dontCollectList = new SelectModelField("dontCollectList", "不收取能量列表", new LinkedHashSet<>(), AlipayUser::getList));
         modelFields.addField(pkEnergy = new BooleanModelField("pkEnergy", "Pk榜收取 | 开关", false));
         modelFields.addField(collectWateringBubble = new BooleanModelField("collectWateringBubble", "收取金球", false));
+        modelFields.addField(wateredFriendList = new SelectAndCountModelField("wateredFriendList", "统计 | 应被好友浇水", new LinkedHashMap<>(), AlipayUser::getList, "请填写被浇水次数(用于核对金球)"));
         modelFields.addField(collectRobExpandEnergy = new IntegerModelField("collectRobExpandEnergy", "额外能量领取(大于该值收取)", 100, 0, 1000000));
         modelFields.addField(expiredEnergy = new BooleanModelField("expiredEnergy", "收取过期能量", false));
         modelFields.addField(queryInterval = new StringModelField("queryInterval", "查询间隔(毫秒或毫秒范围)", "500-1000"));

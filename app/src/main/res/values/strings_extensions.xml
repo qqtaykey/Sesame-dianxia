@@ -10,6 +10,7 @@
     <string name="set_custom_walk_path_id_list">Set custom walk pathId list🚶🏻‍♂️</string>
     <string name="set_custom_walk_path_id_queue">Set custom walk pathId queue🚶🏻‍♂️</string>
     <string name="developer_mode">Developer mode💻</string>
+    <string name="fill_watered_friend_list">Fill watered friend list📝</string>
 
     <string name="btn_add_custom_walk_path_id">Add</string>
     <string name="btn_clear_custom_walk_path_id_queue">Clear</string>

@@ -30,8 +30,7 @@ import io.github.lazyimmortal.sesame.util.idMap.*;
  * 基础配置模块
  */
 public class BaseModel extends Model {
-    
-    @Getter
+     @Getter
     private static final BooleanModelField stayAwake = new BooleanModelField("stayAwake", "保持唤醒", true);
     @Getter
     private static final IntegerModelField.MultiplyIntegerModelField checkInterval = new IntegerModelField.MultiplyIntegerModelField("checkInterval", "执行间隔(分钟)", 50, 1, 12 * 60, 60_000);

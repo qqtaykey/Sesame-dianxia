@@ -38,6 +38,8 @@ public class ExtensionsHandle {
                     queryAreaTrees();
                 } else if (Objects.equals("getUnlockTreeItems", fun)) {
                     getUnlockTreeItems();
+                } else if (Objects.equals("fillWateredFriendList", fun)) {
+                    fillWateredFriendList();
                 }
                 break;
             case "setCustomWalkPathIdList":
@@ -68,6 +70,10 @@ public class ExtensionsHandle {
     
     private static void getWateringItems() {
         Status.getWateringFriendToday();
+    }
+
+    private static void fillWateredFriendList() {
+        Status.fillWateredFriendList();
     }
     
     private static void getNewTreeItems() {

@@ -10,6 +10,7 @@
     <string name="set_custom_walk_path_id_list">自定义路线列表🚶🏻‍♂️</string>
     <string name="set_custom_walk_path_id_queue">待行走路线队列🚶🏻‍♂️</string>
     <string name="developer_mode">开发者模式💻</string>
+    <string name="fill_watered_friend_list">实收金球刷应被浇水📝</string>
 
     <string name="btn_add_custom_walk_path_id">添加</string>
     <string name="btn_clear_custom_walk_path_id_queue">清除</string>

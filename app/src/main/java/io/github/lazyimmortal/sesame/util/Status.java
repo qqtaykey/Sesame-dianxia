@@ -8,6 +8,9 @@ import io.github.lazyimmortal.sesame.data.task.ModelTask;
 import io.github.lazyimmortal.sesame.model.task.antFarm.AntFarm;
 import io.github.lazyimmortal.sesame.model.task.antForest.AntForestV2;
 import io.github.lazyimmortal.sesame.util.idMap.UserIdMap;
+import io.github.lazyimmortal.sesame.data.ConfigV2;
+import io.github.lazyimmortal.sesame.data.ModelFields;
+import io.github.lazyimmortal.sesame.data.ModelField;
 
 import java.io.File;
 import java.util.*;
@@ -162,6 +165,135 @@ public class Status {
         
         // 4. 输出汇总统计信息
         Log.forest("统计被水🍯共计被"+friendCount+"个好友浇水"+ totalWaterAmount+"次#[" + UserIdMap.getShowName(UserIdMap.getCurrentUid()) + "]");
+    
+        // 5. 从ConfigV2读取wateredFriendList配置值
+        Map<String, Integer> configWateredFriendList = null;
+        try {
+            ModelFields antForestFields = ConfigV2.INSTANCE.getModelFieldsMap().get("AntForestV2");
+            if (antForestFields != null) {
+                ModelField<?> wateredFriendField = antForestFields.get("wateredFriendList");
+                if (wateredFriendField != null && wateredFriendField.getValue() instanceof Map) {
+                    configWateredFriendList = (Map<String, Integer>) wateredFriendField.getValue();
+                }
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "获取wateredFriendList配置失败:");
+            Log.printStackTrace(TAG, e);
+        }
+        
+        // 6. 如果配置存在且不为空，输出预计统计和差别
+        if (configWateredFriendList != null && !configWateredFriendList.isEmpty()) {
+            // 6.1 输出预计统计信息
+            int configFriendCount = 0;
+            int configTotalWaterAmount = 0;
+            for (Map.Entry<String, Integer> entry : configWateredFriendList.entrySet()) {
+                Integer configWaterAmount = entry.getValue();
+                if (configWaterAmount != null && configWaterAmount > 0) {
+                    configFriendCount++;
+                    configTotalWaterAmount += configWaterAmount;
+                }
+            }
+            Log.forest("统计被水🍯预计被"+configFriendCount+"个好友浇水"+ configTotalWaterAmount+"次#[" + UserIdMap.getShowName(UserIdMap.getCurrentUid()) + "]");
+
+            // 6.2 对比配置和实际浇水情况，输出差别
+            for (Map.Entry<String, Integer> entry : configWateredFriendList.entrySet()) {
+                String friendId = entry.getKey();
+                Integer configWaterAmount = entry.getValue();
+                if (configWaterAmount != null && configWaterAmount > 0) {
+                    Integer actualWaterAmount = INSTANCE.wateredFriendLogList.get(friendId);
+                    String friendName = UserIdMap.getShowName(friendId);
+                    int actual = actualWaterAmount == null ? 0 : actualWaterAmount;
+                    int diff = configWaterAmount - actual;
+                    if (diff != 0) {
+                        Log.forest("统计被水🍯被[" + friendName + "]缺少" + diff + "次");       
+                    }
+                }
+            }
+        }
+    }
+
+    public static void fillWateredFriendList() {
+        // 1. 获取当前被浇水的好友数据
+        Map<String, Integer> currentData = INSTANCE.wateredFriendLogList;
+        if (currentData == null || currentData.isEmpty()) {
+            Log.forest("填入被水🍯[当前没有被浇水数据]");
+            return;
+        }
+
+        // 2. 从ConfigV2读取wateredFriendList配置值
+        Map<String, Integer> configWateredFriendList = null;
+        try {
+            ModelFields antForestFields = ConfigV2.INSTANCE.getModelFieldsMap().get("AntForestV2");
+            if (antForestFields != null) {
+                ModelField<?> wateredFriendField = antForestFields.get("wateredFriendList");
+                if (wateredFriendField != null && wateredFriendField.getValue() instanceof Map) {
+                    configWateredFriendList = (Map<String, Integer>) wateredFriendField.getValue();
+                }
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "获取wateredFriendList配置失败:");
+            Log.printStackTrace(TAG, e);
+        }
+
+        // 3. 如果配置为空，创建一个新的LinkedHashMap
+        if (configWateredFriendList == null) {
+            configWateredFriendList = new LinkedHashMap<>();
+        }
+
+        // 4. 将当前被浇水数据填入配置
+        int addedCount = 0;
+        int updatedCount = 0;
+        for (Map.Entry<String, Integer> entry : currentData.entrySet()) {
+            String friendId = entry.getKey();
+            Integer waterAmount = entry.getValue();
+            if (waterAmount != null && waterAmount > 0) {
+                if (configWateredFriendList.containsKey(friendId)) {
+                    // 更新已有记录
+                    configWateredFriendList.put(friendId, waterAmount);
+                    updatedCount++;
+                    String friendName = UserIdMap.getShowName(friendId);
+                    Log.forest("填入被水🍯更新[" + friendName + "]为" + waterAmount + "次");
+                } else {
+                    // 新增记录
+                    configWateredFriendList.put(friendId, waterAmount);
+                    addedCount++;
+                    String friendName = UserIdMap.getShowName(friendId);
+                    Log.forest("填入被水🍯新增[" + friendName + "]" + waterAmount + "次");
+                }
+            }
+        }
+
+        // 5. 清除配置中不在实际被浇水列表里的项
+        int removedCount = 0;
+        Iterator<Map.Entry<String, Integer>> iterator = configWateredFriendList.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Integer> entry = iterator.next();
+            String friendId = entry.getKey();
+            if (!currentData.containsKey(friendId)) {
+                    Integer waterAmount = entry.getValue();
+                    iterator.remove();
+                    removedCount++;
+                    String friendName = UserIdMap.getShowName(friendId);
+                    Log.forest("填入被水🍯清除[" + friendName + "]" + (waterAmount != null ? waterAmount : 0) + "次");
+                }
+        }
+
+        // 6. 保存配置到ConfigV2
+        try {
+            ModelFields antForestFields = ConfigV2.INSTANCE.getModelFieldsMap().get("AntForestV2");
+            if (antForestFields != null) {
+                ModelField<?> wateredFriendField = antForestFields.get("wateredFriendList");
+                if (wateredFriendField != null) {
+                    wateredFriendField.setObjectValue(configWateredFriendList);
+                    String currentUid = UserIdMap.getCurrentUid();
+                    ConfigV2.save(currentUid, true);
+                    Log.forest("填入被水🍯完成新增" + addedCount + "个更新" + updatedCount + "个清除" + removedCount + "个#[" + UserIdMap.getShowName(UserIdMap.getCurrentUid()) + "]");
+                }
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "保存wateredFriendList配置失败:");
+            Log.printStackTrace(TAG, e);
+        }
     }
     
     public static void wateringFriendToday(String id) {
@@ -198,6 +330,51 @@ public class Status {
         
         // 4. 输出汇总统计信息
         Log.forest("统计浇水🚿共计给"+friendCount+"个好友浇水"+ totalWaterAmount+"次#[" + UserIdMap.getShowName(UserIdMap.getCurrentUid()) + "]");
+        
+        // 5. 从ConfigV2读取waterFriendList配置值
+        Map<String, Integer> configWaterFriendList = null;
+        try {
+            ModelFields antForestFields = ConfigV2.INSTANCE.getModelFieldsMap().get("AntForestV2");
+            if (antForestFields != null) {
+                ModelField<?> waterFriendField = antForestFields.get("waterFriendList");
+                if (waterFriendField != null && waterFriendField.getValue() instanceof Map) {
+                    configWaterFriendList = (Map<String, Integer>) waterFriendField.getValue();
+                }
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "获取waterFriendList配置失败:");
+            Log.printStackTrace(TAG, e);
+        }
+        
+        // 6. 如果配置存在且不为空，输出预计统计和差别
+        if (configWaterFriendList != null && !configWaterFriendList.isEmpty()) {
+            // 6.1 输出预计统计信息
+            int configFriendCount = 0;
+            int configTotalWaterAmount = 0;
+            for (Map.Entry<String, Integer> entry : configWaterFriendList.entrySet()) {
+                Integer configWaterAmount = entry.getValue();
+                if (configWaterAmount != null && configWaterAmount > 0) {
+                    configFriendCount++;
+                    configTotalWaterAmount += configWaterAmount;
+                }
+            }
+            Log.forest("统计浇水🚿预计给"+configFriendCount+"个好友浇水"+ configTotalWaterAmount+"次#[" + UserIdMap.getShowName(UserIdMap.getCurrentUid()) + "]");
+
+            // 6.2 对比配置和实际浇水情况，输出差别
+            for (Map.Entry<String, Integer> entry : configWaterFriendList.entrySet()) {
+                String friendId = entry.getKey();
+                Integer configWaterAmount = entry.getValue();
+                if (configWaterAmount != null && configWaterAmount > 0) {
+                    Integer actualWaterAmount = INSTANCE.wateringFriendLogList.get(friendId);
+                    String friendName = UserIdMap.getShowName(friendId);
+                    int actual = actualWaterAmount == null ? 0 : actualWaterAmount;
+                    int diff = configWaterAmount - actual;
+                    if (diff != 0) {
+                        Log.forest("统计浇水🚿给[" + friendName + "]缺少" + diff + "次");       
+                    }
+                }
+            }
+        }
     }
     
     public static Boolean canWaterFriendToday(String id, int newCount) {
