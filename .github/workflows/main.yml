@@ -1,4 +1,4 @@
-name: 打包生成APK
+name: 自动打包发布APK
 on:
   workflow_dispatch:
 
@@ -12,22 +12,23 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'
-          cache: gradle
+          distribution: temurin
 
-      - name: Grant execute permission for gradlew
+      - name: Grant permission
         run: chmod +x gradlew
 
-      - name: Clean build
-        run: ./gradlew clean
-
-      - name: Build release APK
+      - name: Build
         run: ./gradlew assembleRelease
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Move APK to root
+        run: |
+          mkdir -p release
+          cp app/build/outputs/apk/compatible/release/*.apk release/
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: APK
-          path: |
-            app/build/outputs/apk/normal/release/
-            app/build/outputs/apk/compatible/release/
+          files: release/*.apk
+          tag_name: ${{ github.run_number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
