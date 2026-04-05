@@ -1,10 +1,12 @@
-name: 自动打包发布APK
+name: 打包发布到Release
 on:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -14,21 +16,18 @@ jobs:
           java-version: '17'
           distribution: temurin
 
-      - name: Grant permission
+      - name: 授权
         run: chmod +x gradlew
 
-      - name: Build
+      - name: 打包
         run: ./gradlew assembleRelease
 
-      - name: Move APK to root
-        run: |
-          mkdir -p release
-          cp app/build/outputs/apk/compatible/release/*.apk release/
-
-      - name: Upload to Release
+      - name: 发布到Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release/*.apk
-          tag_name: ${{ github.run_number }}
+          files: |
+            app/build/outputs/apk/normal/release/*.apk
+            app/build/outputs/apk/compatible/release/*.apk
+          tag_name: build_${{ github.run_number }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
